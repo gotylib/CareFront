@@ -50,17 +50,21 @@ export default defineComponent({
     const localCode2FA = ref<string>('');
 
     const auth2FA = async () => {
-      try {
-        const response = await axios.get<{ accessToken: string; refreshToken: string }>(
-          `https://localhost:30001/api/Users/Auth2FA?code=${localCode2FA.value}&code2FA=${props.guid}&name=${props.username}`
-        );
-        accessToken.value = response.data.accessToken;
-        refreshToken.value = response.data.refreshToken;
-      } catch (error) {
-        console.error('Ошибка двухфакторной аутентификации:', error);
-        console.log(localCode2FA.value);
-      }
+        try {
+            const response = await axios.get<{ accessToken: string; refreshToken: string }>(
+            `https://localhost:30001/api/Users/Auth2FA?code=${localCode2FA.value}&code2FA=${props.guid}&name=${props.username}`
+            );
+            // Сохранение токенов в localStorage
+            localStorage.setItem('accessToken', response.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.refreshToken);
+            goBack();
+
+        } catch (error) {
+            console.error('Ошибка двухфакторной аутентификации:', error);
+            console.log(localCode2FA.value);
+        }
     };
+
 
     const handleInput = (index: number, event: Event) => {
       const inputValue = (event.target as HTMLInputElement).value;
