@@ -43,9 +43,8 @@ apiClient.interceptors.response.use(
 
       try {
         // Запрос на обновление токена
-        const refreshToken = localStorage.getItem('refreshToken');
         const response = await axios.put<{ token: string; expiration: string }>(
-          'https://localhost:55971/api/Users/RefreshToken',
+          'https://localhost:30001/api/Users/RefreshToken',
           {
             token: refreshToken,
             expiration: new Date().toISOString(),
@@ -55,6 +54,7 @@ apiClient.interceptors.response.use(
               accept: '*/*',
               'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
             },
+            withCredentials: true
           }
         );
 
@@ -62,12 +62,10 @@ apiClient.interceptors.response.use(
 
         // Сохраняем новый токен
         localStorage.setItem('accessToken', token);
-        localStorage.setItem('refreshToken', token); // Обновляем refresh token, если нужно
 
         // Повторяем оригинальный запрос с новым токеном
-        originalRequest.headers = originalRequest.headers || {};
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return apiClient(originalRequest);
+
+        return apiClient.request(originalRequest);
       } catch (refreshError) {
         // Если не удалось обновить токен, перенаправляем на страницу логина
         localStorage.removeItem('accessToken');

@@ -7,7 +7,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'entrance',
+      name: 'auth',
       component: Auth,
     },
     {

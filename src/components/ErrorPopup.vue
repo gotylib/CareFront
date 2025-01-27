@@ -7,52 +7,47 @@
     </div>
   </template>
   
-  <script lang="ts">
+  <script setup lang="ts">
   import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
   
-  export default defineComponent({
-    name: 'ErrorPopup',
-    setup() {
-      const errorMessage = ref<string>('');
+  const errorMessage = ref<string>('');
   
-      const showError = (message: string) => {
-        errorMessage.value = message;
-        setTimeout(() => {
-          errorMessage.value = '';
-        }, 5000);
-      };
-  
-      const closeErrorPopup = () => {
-        errorMessage.value = '';
-      };
-  
-      const originalConsoleError = console.error;
-      console.error = (message: string) => {
-        showError(message);
-        originalConsoleError(message);
-      };
-  
-      onMounted(() => {
-        window.addEventListener('error', (event) => {
-          showError(event.message);
-          event.preventDefault();
-        });
-      });
-  
-      onUnmounted(() => {
-        window.removeEventListener('error', (event) => {
-          showError(event.message);
-          event.preventDefault();
-        });
-        console.error = originalConsoleError;
-      });
-  
-      return {
-        errorMessage,
-        closeErrorPopup,
-      };
-    },
+  const showError = (message: string) => {
+    errorMessage.value = message;
+    setTimeout(() => {
+      errorMessage.value = '';
+    }, 5000);
+  };
+
+  const closeErrorPopup = () => {
+    errorMessage.value = '';
+  };
+
+  const originalConsoleError = console.error;
+  console.error = (message: string) => {
+    showError(message);
+    originalConsoleError(message);
+  };
+
+  onMounted(() => {
+    window.addEventListener('error', (event) => {
+      showError(event.message);
+      event.preventDefault();
+    });
   });
+
+  onUnmounted(() => {
+    window.removeEventListener('error', (event) => {
+      showError(event.message);
+      event.preventDefault();
+    });
+    console.error = originalConsoleError;
+  });
+
+  return {
+    errorMessage,
+    closeErrorPopup,
+  };
   </script>
   
   <style scoped>

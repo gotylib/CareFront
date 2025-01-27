@@ -1,5 +1,5 @@
 import apiClient from './axios';
-import type { AxiosResponse } from 'axios';
+import { isAxiosError, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
 interface RegisterParams {
   username: string;
@@ -28,6 +28,36 @@ interface ApiService {
   register(params: RegisterParams): Promise<Blob>;
   login(params: LoginParams): Promise<string>;
   auth2FA(params: Auth2FAParams): Promise<Auth2FAResponse>;
+
+}
+
+export const makeAxiosRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
+  try {
+    const response = await apiClient<T>(config);
+    return response.data;
+  } catch (error) {
+    if (isAxiosError(error))
+      if (error.name === 'Network Error') {
+        message.error('Проверьте ваше подключение к интернету');
+      } else if (error.name !== 'CanceledError') {
+        const errorData = error.response?.data as IApiResponse;
+        if (errorData && errorData.error && errorData.error.errorMessage) {
+          message.error(errorData.error.errorMessage);
+        } else {
+          message.error('Произошла непредвиденная ошибка');
+        }
+      }
+
+    throw error;
+  }
+};
+
+export const login = async (params: LoginParams): Promise<string> => {
+  const response = await apiClient.post<{ guid: string }>('api/Users/Login', {
+    name: params.username,
+    password: params.password,
+  });
+  return response.data.guid;
 }
 
 const api: ApiService = {
