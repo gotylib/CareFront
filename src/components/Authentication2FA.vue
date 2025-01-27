@@ -21,85 +21,80 @@
     </div>
   </template>
   
-  
   <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
-import axios from 'axios';
-import type { PropType } from 'vue';
+  import { defineComponent, ref, watch } from 'vue';
+  import type { PropType } from 'vue';
+  import api from '../services/api';
 
-export default defineComponent({
-  name: "Auth2FA",
-  props: {
-    code2FA: {
-      type: String as PropType<string>,
-      required: true
+  export default defineComponent({
+    name: "Auth2FA",
+    props: {
+      code2FA: {
+        type: String as PropType<string>,
+        required: true
+      },
+      guid: {
+        type: String as PropType<string>,
+        required: true
+      },
+      username: {
+        type: String as PropType<string>,
+        required: true
+      }
     },
-    guid: {
-      type: String as PropType<string>,
-      required: true
-    },
-    username: {
-      type: String as PropType<string>,
-      required: true
-    }
-  },
-  setup(props, { emit }) {
-    const inputs = ref(Array(6).fill(''));
-    const accessToken = ref<string>('');
-    const refreshToken = ref<string>('');
-    const localCode2FA = ref<string>('');
+    setup(props, { emit }) {
+      const inputs = ref(Array(6).fill(''));
+      const localCode2FA = ref<string>('');
 
-    const auth2FA = async () => {
+      const auth2FA = async () => {
         try {
-            const response = await axios.get<{ accessToken: string; refreshToken: string }>(
-            `https://localhost:30001/api/Users/Auth2FA?code=${localCode2FA.value}&code2FA=${props.guid}&name=${props.username}`
-            );
-            // Сохранение токенов в localStorage
-            localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('refreshToken', response.data.refreshToken);
-            goBack();
-
+          await api.auth2FA({
+            code: localCode2FA.value,
+            guid: props.guid,
+            username: props.username
+          });
+          goBack();
         } catch (error) {
-            console.error('Ошибка двухфакторной аутентификации:', error);
-            console.log(localCode2FA.value);
+          console.error('Ошибка двухфакторной аутентификации:', error);
+          console.log(localCode2FA.value);
         }
-    };
+      };
 
 
-    const handleInput = (index: number, event: Event) => {
-      const inputValue = (event.target as HTMLInputElement).value;
-      inputs.value[index] = inputValue;
-      localCode2FA.value = inputs.value.join('');
+      const handleInput = (index: number, event: Event) => {
+        const inputValue = (event.target as HTMLInputElement).value;
+        inputs.value[index] = inputValue;
+        localCode2FA.value = inputs.value.join('');
 
-      if (inputValue && index < inputs.value.length - 1) {
-        const nextInput = (event.target as HTMLInputElement).nextElementSibling as HTMLInputElement | null;
-        nextInput?.focus();
-      }
+        if (inputValue && index < inputs.value.length - 1) {
+          const nextInput = (event.target as HTMLInputElement).nextElementSibling as HTMLInputElement | null;
+          nextInput?.focus();
+        }
 
-      if (localCode2FA.value.length === inputs.value.length) {
-        auth2FA();
-      }
-    };
+        if (localCode2FA.value.length === inputs.value.length) {
+          auth2FA();
+        }
+      };
 
-    const handleKeydown = (index: number, event: KeyboardEvent) => {
-      if (event.key === 'Backspace' && index > 0 && !inputs.value[index]) {
-        const prevInput = (event.target as HTMLInputElement).previousElementSibling as HTMLInputElement | null;
-        prevInput?.focus();
-      }
-    };
+      const handleKeydown = (index: number, event: KeyboardEvent) => {
+        if (event.key === 'Backspace' && index > 0 && !inputs.value[index]) {
+          const prevInput = (event.target as HTMLInputElement).previousElementSibling as HTMLInputElement | null;
+          prevInput?.focus();
+        }
+      };
 
-    const goBack = () => {
-      emit('goBack');
-    };
+      const goBack = () => {
+        emit('goBack');
+      };
 
-    return {
-      inputs,
-      handleInput,
-      handleKeydown,
-      goBack
-    };
-  }
-});
+      return {
+        inputs,
+        handleInput,
+        handleKeydown,
+        goBack
+      };
+    }
+  });
 </script>
 
   
