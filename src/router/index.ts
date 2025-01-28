@@ -6,8 +6,8 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'entrance',
+      path: '/login',
+      name: 'auth',
       component: Auth,
     },
     {
