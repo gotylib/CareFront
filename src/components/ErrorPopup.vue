@@ -43,11 +43,6 @@
     });
     console.error = originalConsoleError;
   });
-
-  return {
-    errorMessage,
-    closeErrorPopup,
-  };
   </script>
   
   <style scoped>

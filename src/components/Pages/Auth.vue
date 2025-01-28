@@ -1,21 +1,21 @@
 <template>
   <div class="popup">
     <div class="popup-content">
-      <div v-if="!guid && !showQRCode && !showAuth2FA">
-        <RegisterForm v-if="isRegister" @toggleForm="toggleForm" @showQRCode="showQRCodeHandler" />
-        <LoginForm v-else @toggleForm="toggleForm" @showAuth2FA="showAuth2FAHandler" />
+      <div v-if="!authStore.guid && !authStore.showQRCode && !authStore.showAuth2FA">
+        <RegisterForm v-if="authStore.isRegister" @toggleForm="authStore.toggleForm" @showQRCode="authStore.showQRCodeHandler" />
+        <LoginForm v-else @toggleForm="authStore.toggleForm" @showAuth2FA="authStore.showAuth2FAHandler" />
       </div>
 
-      <div v-if="showQRCode">
-        <QRCode :qrCode="qrCode" @goBack="goBack" />
+      <div v-if="authStore.showQRCode">
+        <QRCode :qrCode="authStore.qrCode" @goBack="authStore.goBack" />
       </div>
 
-      <div v-if="showAuth2FA">
+      <div v-if="authStore.showAuth2FA">
         <Authentication2FA
-          :code2FA="code2FA"
-          :guid="guid"
-          :username="username"
-          @goBack="goBack"
+          :code2FA="authStore.code2FA"
+          :guidProps="authStore.guid"
+          :username="authStore.username"
+          @goBack="authStore.goBack"
         />
       </div>
     </div>
@@ -24,79 +24,28 @@
   <ErrorPopup />
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
-import Authentication2FA from '../Authentication2FA.vue';
-import QRCode from '../QRCode.vue';
-import ErrorPopup from '../ErrorPopup.vue';
-import RegisterForm from '../RegisterForm.vue';
-import LoginForm from '../LoginForm.vue';
+<script lang="ts" setup>
+import { onMounted } from 'vue';
+import Authentication2FA from '@/components/Authentication2FA.vue';
+import QRCode from '@/components/QRCode.vue';
+import ErrorPopup from '@/components/ErrorPopup.vue';
+import RegisterForm from '@/components/RegisterForm.vue';
+import LoginForm from '@/components/LoginForm.vue';
+import { useAuthStore } from '@/stores/auth';
 
-export default defineComponent({
-  name: 'AuthComponent',
-  components: {
-    Authentication2FA,
-    QRCode,
-    ErrorPopup,
-    RegisterForm,
-    LoginForm,
-  },
-  setup() {
-    const isRegister = ref<boolean>(localStorage.getItem('isRegister') === 'true');
-    const qrCode = ref<string>('');
-    const guid = ref<string>('');
-    const code2FA = ref<string>('');
-    const username = ref<string>('');
-    const showQRCode = ref<boolean>(false);
-    const showAuth2FA = ref<boolean>(false);
+// Используем хранилище
+const authStore = useAuthStore();
 
-    const toggleForm = () => {
-      isRegister.value = !isRegister.value;
-      localStorage.setItem('isRegister', isRegister.value.toString());
-    };
-
-    const showQRCodeHandler = (url: string) => {
-      qrCode.value = url;
-      showQRCode.value = true;
-    };
-
-    const showAuth2FAHandler = ({ response, username: usernameParam }: { response: string; username: string }) => {
-      guid.value = response;
-      username.value = usernameParam; // Corrected this line
-      showAuth2FA.value = true;
-    };
-
-    const goBack = () => {
-      guid.value = '';
-      showQRCode.value = false;
-      showAuth2FA.value = false;
-    };
-
-    return {
-      isRegister,
-      qrCode,
-      guid,
-      code2FA,
-      username,
-      showQRCode,
-      showAuth2FA,
-      toggleForm,
-      showQRCodeHandler,
-      showAuth2FAHandler,
-      goBack,
-    };
-  },
-  mounted() {
-    const savedIsRegister = localStorage.getItem('isRegister');
-    if (savedIsRegister !== null) {
-      this.isRegister = savedIsRegister === 'true';
-    }
-  },
+onMounted(() => {
+  const savedIsRegister = localStorage.getItem('isRegister');
+  if (savedIsRegister !== null) {
+    authStore.isRegister = savedIsRegister === 'true';
+  }
 });
 </script>
-  
 
-<style >
+
+<style scoped>
 .popup {
     position: fixed;
     top: 0;
