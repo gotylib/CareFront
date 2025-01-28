@@ -26,11 +26,11 @@
 
 <script lang="ts" setup>
 import { onMounted } from 'vue';
-import Authentication2FA from '@/components/Authentication2FA.vue';
-import QRCode from '@/components/QRCode.vue';
+import Authentication2FA from '@/components/Auth/Authentication2FA.vue';
+import QRCode from '@/components/Auth/QRCode.vue';
 import ErrorPopup from '@/components/ErrorPopup.vue';
-import RegisterForm from '@/components/RegisterForm.vue';
-import LoginForm from '@/components/LoginForm.vue';
+import RegisterForm from '@/components/Auth/RegisterForm.vue';
+import LoginForm from '@/components/Auth/LoginForm.vue';
 import { useAuthStore } from '@/stores/auth';
 
 // Используем хранилище

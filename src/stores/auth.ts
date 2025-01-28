@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', {
     username: '',
     showQRCode: false,
     showAuth2FA: false,
+    isAuthenticated: false,
   }),
   actions: {
     toggleForm() {

@@ -18,8 +18,21 @@ interface Auth2FAParams {
   username: string;
 }
 
-interface Auth2FAResponse {
-  accessToken: string;
+interface Car {
+  id: number;
+  make: string;
+  model: string;
+  color: string;
+  addTime: string;
+  addUserName: string;
+  nameOfPhoto: string;
+  stockCount: number;
+  isAvailable: boolean;
+  photo?: Blob; // Добавляем поле для фотографии
+}
+
+interface GetCarsResponse {
+  cars: Car[];
 }
 
 /**
@@ -59,8 +72,8 @@ const register = async (params: RegisterParams): Promise<Blob> => {
  * @param {Auth2FAParams} params - Параметры двухфакторной аутентификации
  * @returns {Promise<Auth2FAResponse>} - Ответ с токенами доступа и обновления
  */
-const auth2FA = async (params: Auth2FAParams): Promise<Auth2FAResponse> => {
-  const response = await makeAxiosRequest<Auth2FAResponse>({
+const auth2FA = async (params: Auth2FAParams): Promise<string> => {
+  const response = await makeAxiosRequest<string>({
     method: 'get',
     url: 'api/Users/Auth2FA',
     params: {
@@ -71,9 +84,58 @@ const auth2FA = async (params: Auth2FAParams): Promise<Auth2FAResponse> => {
   });
 
   // Сохранение accessToken в localStorage
-  localStorage.setItem('accessToken', response.accessToken);
+  localStorage.setItem('accessToken', response);
 
   return response;
 };
 
-export { login, register, auth2FA };
+/**
+ * 
+ * @returns {Promise<number>} - Ответ с количеством машин в корзине
+ */
+const getBasketCarCount = async () : Promise<number> => {
+  const response = await makeAxiosRequest<number>({
+    method: 'get',
+    url: 'api/Cars/GetBasketCount',
+    
+  });
+  return response;
+}
+
+/**
+ * Получение фотографии машины
+ * @param {string} photoName - Имя фотографии
+ * @returns {Promise<Blob>} - Фотография в формате Blob
+ */
+const getCarPhoto = async (photoName: string): Promise<Blob> => {
+  const response = await makeAxiosRequest<Blob>({
+    method: 'post',
+    url: `api/Cars/GetCarPhoto?name=${photoName}`,
+    responseType: 'blob',
+  });
+  return response;
+};
+
+/**
+ * Получение списка машин с фотографиями
+ * @returns {Promise<GetCarsResponse>} - Ответ с массивом машин и фотографиями
+ */
+const getCars = async (): Promise<GetCarsResponse> => {
+  const carsResponse = await makeAxiosRequest<Car[]>({
+    method: 'get',
+    url: 'api/Cars/Get',
+  });
+
+  const photoRequests = carsResponse.map(car => getCarPhoto(car.nameOfPhoto));
+  const photos = await Promise.all(photoRequests);
+
+  const carsWithPhotos = carsResponse.map((car, index) => ({
+    ...car,
+    photo: photos[index],
+  }));
+
+  return { cars: carsWithPhotos };
+};
+
+
+export { login, register, auth2FA , getBasketCarCount, getCars};
