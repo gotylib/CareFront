@@ -25,6 +25,7 @@
 import { ref } from 'vue';
 import { auth2FA as apiAuth2FA } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
+import router from '@/router/index'
 
 // Определяем пропсы
 const props = defineProps<{
@@ -48,6 +49,8 @@ const auth2FA = async () => {
       guid: props.guidProps,
       username: props.username,
     });
+    authStore.isAuthenticated = true;
+    router.push('/shop');
     authStore.goBack(); // Переход назад после успешной аутентификации
   } catch (error) {
     console.error('Ошибка двухфакторной аутентификации:', error);

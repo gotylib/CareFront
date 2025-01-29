@@ -9,6 +9,8 @@ export const useAuthStore = defineStore('auth', {
     username: '',
     showQRCode: false,
     showAuth2FA: false,
+    isAuthenticated: false,
+    isSelected: false
   }),
   actions: {
     toggleForm() {
@@ -29,5 +31,11 @@ export const useAuthStore = defineStore('auth', {
       this.showQRCode = false;
       this.showAuth2FA = false;
     },
+    selectedOf(){
+      this.isSelected = false;
+    },
+    selectedOn(){
+      this.isSelected = true;
+    }
   },
 });
