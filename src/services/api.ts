@@ -31,8 +31,30 @@ interface Car {
   photo?: Blob; // Добавляем поле для фотографии
 }
 
+interface CarWithoutPhoto {
+  id: number;
+  make: string;
+  model: string;
+  color: string;
+  addTime: string;
+  addUserName: string;
+  nameOfPhoto: string;
+  stockCount: number;
+  isAvailable: boolean;
+}
+
+interface GetCarWithoutPhotoResponse {
+  cars: CarWithoutPhoto[];
+}
+
 interface GetCarsResponse {
   cars: Car[];
+}
+
+interface CarsSelectors {
+  make: string[];
+  model: string[];
+  color: string[];
 }
 
 /**
@@ -90,17 +112,16 @@ const auth2FA = async (params: Auth2FAParams): Promise<string> => {
 };
 
 /**
- * 
+ *
  * @returns {Promise<number>} - Ответ с количеством машин в корзине
  */
-const getBasketCarCount = async () : Promise<number> => {
+const getBasketCarCount = async (): Promise<number> => {
   const response = await makeAxiosRequest<number>({
     method: 'get',
     url: 'api/Cars/GetBasketCount',
-    
   });
   return response;
-}
+};
 
 /**
  * Получение фотографии машины
@@ -116,26 +137,56 @@ const getCarPhoto = async (photoName: string): Promise<Blob> => {
   return response;
 };
 
-/**
- * Получение списка машин с фотографиями
- * @returns {Promise<GetCarsResponse>} - Ответ с массивом машин и фотографиями
- */
-const getCars = async (): Promise<GetCarsResponse> => {
-  const carsResponse = await makeAxiosRequest<Car[]>({
-    method: 'get',
-    url: 'api/Cars/Get',
-  });
-
-  const photoRequests = carsResponse.map(car => getCarPhoto(car.nameOfPhoto));
-  const photos = await Promise.all(photoRequests);
-
-  const carsWithPhotos = carsResponse.map((car, index) => ({
-    ...car,
-    photo: photos[index],
-  }));
-
-  return { cars: carsWithPhotos };
+const getCars = async (filters: { make?: string; model?: string; color?: string }): Promise<GetCarsResponse> => { 
+  const filterConditions = []; 
+ 
+  if (filters.make) filterConditions.push(`make eq '${filters.make}'`); 
+  if (filters.model) filterConditions.push(`model eq '${filters.model}'`); 
+  if (filters.color) filterConditions.push(`color eq '${filters.color}'`); 
+ 
+  const queryParams = new URLSearchParams(); 
+  if (filterConditions.length > 0) { 
+    queryParams.append('$filter', filterConditions.join(' and ')); 
+  } 
+  
+  const carsResponse = await makeAxiosRequest<Car[]>({ 
+    method: 'get', 
+    url: `api/Cars/GetForAll?${queryParams.toString()}`, 
+  }); 
+ 
+  const photoRequests = carsResponse.map(car => getCarPhoto(car.nameOfPhoto)); 
+  const photos = await Promise.all(photoRequests); 
+ 
+  const carsWithPhotos = carsResponse.map((car, index) => ({ 
+    ...car, 
+    photo: photos[index], 
+  })); 
+ 
+  return { cars: carsWithPhotos }; 
 };
 
 
-export { login, register, auth2FA , getBasketCarCount, getCars};
+
+const getCarsWithoutPhoto = async (): Promise<CarWithoutPhoto[]> => {
+  const carsResponse = await makeAxiosRequest<CarWithoutPhoto[]>({
+    method: 'get',
+    url: 'api/Cars/Get',
+  });
+  return carsResponse;
+};
+
+const getCarsSelectors = async (): Promise<CarsSelectors> => {
+  const cars = await getCarsWithoutPhoto();
+
+  const makes = [...new Set(cars.map(car => car.make))];
+  const models = [...new Set(cars.map(car => car.model))];
+  const colors = [...new Set(cars.map(car => car.color))];
+
+  return {
+    make: makes,
+    model: models,
+    color: colors,
+  };
+};
+
+export { login, register, auth2FA, getBasketCarCount, getCars, getCarsSelectors };

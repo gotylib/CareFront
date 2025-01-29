@@ -8,7 +8,7 @@
         <h2>{{ car.make }} {{ car.model }}</h2>
         <p>{{ car.color }}</p>
         <p>
-          <strong>{{ car.stockCount }} ₽</strong>
+          <strong>{{ car.stockCount }} шт</strong>
         </p>
       </div>
       <button class="add-to-cart"><i class="fas fa-shopping-cart"></i></button>
@@ -17,23 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { getCars } from "@/services/api";
+import { computed, onMounted } from "vue";
+import { useCarStore } from "@/stores/carStore";
 
-interface Car {
-  id: number;
-  make: string;
-  model: string;
-  color: string;
-  addTime: string;
-  addUserName: string;
-  nameOfPhoto: string;
-  stockCount: number;
-  isAvailable: boolean;
-  photo?: Blob; // Добавляем поле для фотографии
-}
-
-const cars = ref<Car[]>([]);
+const carStore = useCarStore();
+const cars = computed(() => carStore.cars);
 
 const getImageUrl = (photo: Blob | undefined): string => {
   if (photo) {
@@ -42,13 +30,8 @@ const getImageUrl = (photo: Blob | undefined): string => {
   return ""; // Возвращаем пустую строку, если фото не найдено
 };
 
-onMounted(async () => {
-  try {
-    const response = await getCars();
-    cars.value = response.cars;
-  } catch (error) {
-    console.error("Error fetching cars:", error);
-  }
+onMounted(() => {
+  carStore.fetchCars();
 });
 </script>
 
